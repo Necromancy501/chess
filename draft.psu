@@ -1,0 +1,50 @@
+//STRUCTURE
+
+chess.rb
+- main looping script
+- tightly coupled with board
+- initialized with two players and a .pgn file (nil if not provided)
+
+board.rb
+- main script
+- calls all other classes
+- initialized with a position (default if not provided)
+
+parser.rb
+- pgn file processor
+- gets called in Board and Chess
+- loads a position onto board
+
+pieces.rb
+- manages each piece's individual behavior
+- stores pieces' display characters and moves
++ has subclasses pawn, bishop, king, queen, rook and knight
+
+players.rb
+- main interface between users and classes
+- move(piece) is it's main function
+- initialized with board
+
+rules.rb
+- main behavior class
+- creates, mutates and destructs other classes
+- initialized with board
++ has subclasses tie, check, win, castle, en_passant and promotion
+
+//INTERACTION
+
+chess.new(P1, P2) do
+  @board = board.new
+  board.display
+  puts 'Player 1: Please select a square with a piece (e.g. = e5)'
+  board.light_moves e5 do
+    piece = board.get_piece e5
+    moves = piece.valid_moves board
+    moves_filtered = self.filter_moves board, starting_pos
+    dot_squares(moves)
+    board.display
+  end
+  puts 'Player 1': Please select one of the dotted squares (e.g. = b2)
+  board.move e5 b2
+  parser.save_game
+end
