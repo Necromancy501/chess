@@ -2,9 +2,10 @@ require_relative 'piece_gen'
 
 class Pieces
 
+  attr_reader :figure
+
   def initialize kind, color
-    @symbol = Piece_gen.new
-    @color = color
+    @figure = Piece_gen.new kind, color
   end
 
 end
