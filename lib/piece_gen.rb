@@ -10,22 +10,23 @@ class Piece_gen
     @symbol = pick_piece char, color
   end
 
-  def pick_piece char, color
+  def pick_piece(char, color)
     case char
     when 'r'
-      color=='black' ? '♜ ' : '♖ '
+      color == 'black' ? '♖ ' : '♜ '
     when 'b'
-      color=='black' ? '♝ ' : '♗ '
+      color == 'black' ? '♗ ' : '♝ '
     when 'n'
-      color=='black' ? '♞ ' : '♘ '
+      color == 'black' ? '♘ ' : '♞ '
     when 'q'
-      color=='black' ? '♛ ' : '♕ '
+      color == 'black' ? '♕ ' : '♛ '
     when 'k'
-      color=='black' ? '♚ ' : '♔ '
+      color == 'black' ? '♔ ' : '♚ '
     when 'p'
-      color=='black' ? '♟ ' : '♙ '
+      color == 'black' ? '♙ ' : '♟ '
     end
   end
+  
 
   
 end
