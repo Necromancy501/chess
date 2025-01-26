@@ -14,9 +14,10 @@ class Player
     return if piece == nil || piece.color != @color
     piece_copy = piece.dup
 
-    #if valid_move
-    grid[piece_coordinates[0]][piece_coordinates[1]] = nil
-    grid[end_coordinates[0]][end_coordinates[1]] = piece_copy
+    if valid_move? piece, end_coordinates
+      grid[piece_coordinates[0]][piece_coordinates[1]] = nil
+      grid[end_coordinates[0]][end_coordinates[1]] = piece_copy
+    end
 
   end
 
@@ -33,6 +34,15 @@ class Player
     row = 8 - position[1].to_i
   
     [row, col]
+  end
+
+  def valid_move? piece, finish_coordinates
+    moves = piece.figure.symbol
+    if moves.kind_of?(Array)
+      false
+    else
+      true
+    end
   end
 
 end
