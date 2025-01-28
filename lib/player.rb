@@ -38,16 +38,14 @@ class Player
     [row, col]
   end
 
-  #pending: fix repetition of value appends
-
   def valid_moves piece, start_coordinates, direction = nil, moves_arr = [], i=0, piece_coordinates = nil
     piece_coordinates ||= start_coordinates
+    y, x = start_coordinates[0], start_coordinates[1]
     grid = @board.position
     moves = piece.figure.moves
-    direction = moves[i]
     if moves.kind_of? Array
+      direction = moves[i]
       unless direction == nil
-        y, x = start_coordinates[0], start_coordinates[1]
         next_move = [y-direction[1], x+direction[0]]
         next_square = (next_move.all? { |value| (0..7).include?(value) }) ? (grid[next_move[0]]&.[](next_move[1])) : nil
         if next_square == nil
@@ -56,10 +54,11 @@ class Player
             #return if mate enabler
             moves_arr.append next_move
             valid_moves piece, next_move, direction, moves_arr, i, piece_coordinates
+          else
+            i+=1
+            direction = moves[i]
+            valid_moves piece, piece_coordinates, direction, moves_arr, i, piece_coordinates
           end
-          i+=1
-          direction = moves[i]
-          valid_moves piece, piece_coordinates, direction, moves_arr, i, piece_coordinates
         else
           i+=1
           direction = moves[i]
@@ -72,6 +71,73 @@ class Player
         return moves_arr
       end
     else
+      vectors = moves[:moves]
+      #Rule 1: Orientation
+      if moves[:orientation]
+        if @color == 'white'
+          vectors.pop
+        else
+          vectors.shift
+        end
+      end
+      vectors.each do |move|
+        next_move = [y-move[1], x+move[0]]
+        next_square = (next_move.all? { |value| (0..7).include?(value) }) ? (grid[next_move[0]]&.[](next_move[1])) : nil
+        if next_square.nil?
+          in_bounds = next_move.all? { |value| (0..7).include?(value) }
+          if in_bounds
+            #return if mate enabler
+            moves_arr.append next_move
+          end
+        else
+          if moves[:capture].nil?
+            unless next_square.color == @color
+              moves_arr.append next_move
+            end
+          end
+        end
+      end
+      #Rule 1: Captures
+      unless moves[:capture].nil?
+        captures = moves[:capture]
+        captures.each do |move|
+          next_move = [y-move[1], x+move[0]]
+          next_square = (next_move.all? { |value| (0..7).include?(value) }) ? (grid[next_move[0]]&.[](next_move[1])) : nil
+          unless next_square == nil
+            unless next_square.color == @color
+              moves_arr.append next_move
+            end
+          end
+        end
+      end
+      #Rule 2: Start Ahead
+      if moves[:start_ahead]
+        if @color == 'white'
+          if y == 6
+            next_move = [y-2, x]
+            next_square = (next_move.all? { |value| (0..7).include?(value) }) ? (grid[next_move[0]]&.[](next_move[1])) : nil
+            if next_square.nil?
+              in_bounds = next_move.all? { |value| (0..7).include?(value) }
+              if in_bounds
+                #return if mate enabler
+                moves_arr.append next_move
+              end
+            end
+          end
+        else
+          if y == 1
+            next_move = [y+2, x]
+            next_square = (next_move.all? { |value| (0..7).include?(value) }) ? (grid[next_move[0]]&.[](next_move[1])) : nil
+            if next_square.nil?
+              in_bounds = next_move.all? { |value| (0..7).include?(value) }
+              if in_bounds
+                #return if mate enabler
+                moves_arr.append next_move
+              end
+            end
+          end
+        end
+      end
       #hash valid moves behavior pending
     end
     moves_arr

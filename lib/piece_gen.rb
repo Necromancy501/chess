@@ -37,37 +37,28 @@ class Piece_gen
     when 'n'
       {
         moves: [[1,2],[-1,2],[1,-2],[-1,-2],[2,1],[-2,1],[2,-1],[-2,-1]],
+        orientation: false,
         capture: nil,
-        en_passant: false,
-        promotion: false,
         start_ahead: false,
-        jump: true,
         castle: false,
-        mateable: false
       }
     when 'q'
       [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]
     when 'k'
       {
         moves: [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]],
+        orientation: false,
         capture: nil,
-        en_passant: false,
-        promotion: false,
         start_ahead: false,
-        jump: false,
         castle: true,
-        mateable: true
       }
     when 'p'
       {
-        moves: [0,1],
+        orientation: true,
+        moves: [[0,1],[0,-1]],
         capture: [[1,1],[-1,1]],
-        en_passant: true,
-        promotion: true,
         start_ahead: true,
-        jump: false,
         castle: false,
-        mateable: false
       }
     end
     
