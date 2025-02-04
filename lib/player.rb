@@ -1,11 +1,16 @@
 class Player
 
+  attr_accessor :starts_used, :king_pos
+
   def initialize board, color
     @board = board
     @color = color
+    @starts_used = Set.new
+    @king_pos = color == 'white' ? [7,4] : [0,4]
   end
 
   def move_piece start, finish
+
     grid = @board.position
     piece_coordinates = self.coordinates_to_indexes start
     end_coordinates = self.coordinates_to_indexes finish
@@ -14,16 +19,55 @@ class Player
     return if piece == nil || piece.color != @color
     piece_copy = piece.dup
 
-    p valid_moves piece, piece_coordinates
-
-    if valid_move? piece, end_coordinates
+    if valid_move? piece, piece_coordinates, end_coordinates
       grid[piece_coordinates[0]][piece_coordinates[1]] = nil
       grid[end_coordinates[0]][end_coordinates[1]] = piece_copy
+      @starts_used.add piece_coordinates
+      @king_pos = end_coordinates if piece.figure.name == 'King'
     end
 
   end
 
+  def checked?
+    all_moves_opposite.include? @king_pos
+  end
+
   private
+
+  def enables_check? piece_coordinates, end_coordinates
+    board_copy = @board.dup
+    player_obj = Player.new board_copy, @color
+    grid = board_copy.position
+
+    piece = grid[piece_coordinates[0]][piece_coordinates[1]]
+    piece_copy = piece.dup
+
+    grid[piece_coordinates[0]][piece_coordinates[1]] = nil
+    grid[end_coordinates[0]][end_coordinates[1]] = piece_copy
+    player_obj.starts_used.add piece_coordinates
+    player_obj.king_pos = end_coordinates if piece.figure.name == 'King'
+
+    player_obj.checked?
+  end
+
+  def all_moves_opposite
+    grid = @board.position
+    y = 0
+    grid.reduce(Set.new) do |moves, row|
+      row.each_with_index do |piece, x|
+        unless piece.nil?
+          unless piece.color == @color
+            piece_moves = valid_moves(piece, [y,x])
+            piece_moves.each do |move|
+              moves.add move
+            end
+          end
+        end
+      end
+      y += 1
+      moves
+    end
+  end
 
   def coordinates_to_indexes(position)
     # Ensure the input is valid (e.g., a valid chess square)
@@ -97,7 +141,7 @@ class Player
           end
         end
       end
-      #Rule 1: Captures
+      #Rule 2: Captures
       unless moves[:capture].nil?
         captures = moves[:capture]
         captures.each do |move|
@@ -110,10 +154,11 @@ class Player
           end
         end
       end
-      #Rule 2: Start Ahead
+      #Rule 3: Start Ahead
       if moves[:start_ahead]
         if @color == 'white'
           if y == 6
+               #castle pending
             next_move = [y-2, x]
             next_square = (next_move.all? { |value| (0..7).include?(value) }) ? (grid[next_move[0]]&.[](next_move[1])) : nil
             if next_square.nil?
@@ -138,17 +183,41 @@ class Player
           end
         end
       end
-      #hash valid moves behavior pending
+
+      if moves[:castle]
+        if @color == 'white'
+          unless @starts_used.include? [7,4]
+            if grid[7][5].nil? && grid[7][6].nil?
+              unless all_moves_opposite.include?([7,5]) || all_moves_opposite.include?([7,6])
+                moves_arr.append [7,6]
+              end
+            elsif grid[7][1].nil? && grid[7][2].nil? && grid[7][3].nil?
+              unless all_moves_opposite.include?([7,1]) || all_moves_opposite.include?([7,2]) || all_moves_opposite.include?([7,3])
+                moves_arr.append [7,2]
+              end
+            end
+          end
+        else
+          unless @starts_used.include? [0,4]
+            if grid[0][5].nil? && grid[0][6].nil?
+              unless all_moves_opposite.include?([0,5]) || all_moves_opposite.include?([0,6])
+                moves_arr.append [0,6]
+              end
+            elsif grid[0][1].nil? && grid[0][2].nil? && grid[0][3].nil?
+              unless all_moves_opposite.include?([0,1]) || all_moves_opposite.include?([0,2]) || all_moves_opposite.include?([0,3])
+                moves_arr.append [0,2]
+              end
+            end
+          end
+        end
+      end
     end
     moves_arr
   end
 
-  def valid_move? piece, end_coordinates
-    moves = piece.figure.symbol
-    if moves.kind_of?(Array)
-      false
-    else
-      true
+  def valid_move? piece, piece_coordinates, end_coordinates
+    unless enables_check? piece_coordinates, end_coordinates
+      valid_moves(piece, piece_coordinates).include? end_coordinates
     end
   end
 

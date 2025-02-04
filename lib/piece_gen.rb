@@ -3,11 +3,29 @@ using Rainbow
 
 class Piece_gen
 
-  attr_reader :symbol, :moves
+  attr_reader :symbol, :moves, :name
 
   def initialize char, color;
     @moves = pick_moves char
     @symbol = pick_piece char, color
+    @name = pick_name char
+  end
+
+  def pick_name char
+    case char
+    when 'r'
+      'Rook'
+    when 'b'
+      'Bishop'
+    when 'n'
+      'Knight'
+    when 'q'
+      'Queen'
+    when 'k'
+      'King'
+    when 'p'
+      'Pawn'
+    end
   end
 
   def pick_piece(char, color)
