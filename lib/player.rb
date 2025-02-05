@@ -6,7 +6,7 @@ class Player
     @board = board
     @color = color
     @starts_used = Set.new
-    @king_pos = color == 'white' ? [7,4] : [0,4]
+    @king_pos = find_king @color
   end
 
   def move_piece start, finish
@@ -23,7 +23,7 @@ class Player
       grid[piece_coordinates[0]][piece_coordinates[1]] = nil
       grid[end_coordinates[0]][end_coordinates[1]] = piece_copy
       @starts_used.add piece_coordinates
-      @king_pos = end_coordinates if piece.figure.name == 'King'
+      @king_pos = find_king @color
     end
 
   end
@@ -32,20 +32,34 @@ class Player
     all_moves_opposite.include? @king_pos
   end
 
+  def find_king color
+    grid = @board.position
+    grid.each_with_index do |row, i|
+      row.each_with_index do |square, n|
+        next if square.nil?
+        return [i, n] if square.figure.name == 'King' && square.color == @color
+      end
+    end
+  end
+
   private
 
   def enables_check? piece_coordinates, end_coordinates
     board_copy = @board.dup
-    player_obj = Player.new board_copy, @color
+    board_copy.position = @board.position.map { |row| row.map { |piece| piece.nil? ? nil : piece.dup } }
+
+    player_obj = Player.new(board_copy, @color)
     grid = board_copy.position
 
     piece = grid[piece_coordinates[0]][piece_coordinates[1]]
+    return false if piece.nil? # Guard against nil piece
+
     piece_copy = piece.dup
 
     grid[piece_coordinates[0]][piece_coordinates[1]] = nil
     grid[end_coordinates[0]][end_coordinates[1]] = piece_copy
-    player_obj.starts_used.add piece_coordinates
-    player_obj.king_pos = end_coordinates if piece.figure.name == 'King'
+    player_obj.starts_used.add(piece_coordinates)
+    player_obj.king_pos = player_obj.find_king(@color) # Use player's method
 
     player_obj.checked?
   end
@@ -158,14 +172,14 @@ class Player
       if moves[:start_ahead]
         if @color == 'white'
           if y == 6
-               #castle pending
+            #castle pending
             next_move = [y-2, x]
             next_square = (next_move.all? { |value| (0..7).include?(value) }) ? (grid[next_move[0]]&.[](next_move[1])) : nil
             if next_square.nil?
               in_bounds = next_move.all? { |value| (0..7).include?(value) }
               if in_bounds
                 #return if mate enabler
-                moves_arr.append next_move
+                moves_arr.append next_move if moves_arr.include? [y-1, x]
               end
             end
           end
@@ -217,8 +231,9 @@ class Player
 
   def valid_move? piece, piece_coordinates, end_coordinates
     unless enables_check? piece_coordinates, end_coordinates
-      valid_moves(piece, piece_coordinates).include? end_coordinates
+      return valid_moves(piece, piece_coordinates).include? end_coordinates
     end
+    false
   end
 
 end
